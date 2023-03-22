@@ -10,9 +10,15 @@ import android.view.View.OnTouchListener
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 
+
+
 class MainActivity : AppCompatActivity(), OnTouchListener  {
 
-    private val TAG = "Gest"
+    private val TAG_GEST = "Gest"
+    private val TAG_DEBUG = "debug"
+
+
+
 
     private lateinit var mSurfaceDrag: SurfaceDrag
     private lateinit var mSurfaceRol: SurfaceRol
@@ -23,6 +29,7 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG_DEBUG, "onCreate")
         setContentView(R.layout.activity_main)
 
         dragSV = findViewById(R.id.SV_dragIcon)
@@ -35,6 +42,11 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
         IM_ArrowDOWN = findViewById(R.id.IV_dragDOWN)
 
 
+
+
+
+
+
     }
 
     var wasCenter =false
@@ -43,7 +55,7 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
         return when (motionEvent.action) {
             //Finger touches
             MotionEvent.ACTION_DOWN -> {
-                Log.d(TAG, "Action was DOWN ")
+                Log.d(TAG_GEST, "Action was DOWN ")
                 if (motionEvent.y < (dragSV.height/2)+dragSV.width/2 &&  motionEvent.y >(dragSV.height/2)-dragSV.width/2) {
                     wasCenter = true
                 }
@@ -62,8 +74,8 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
                     } else {
                         IM_ArrowDOWN.visibility = ImageView.INVISIBLE
                     }
-//                Log.d(TAG, "Action was MOVE")
-//                Log.d(TAG, "("+motionEvent.x+","+motionEvent.y+")")
+//                Log.d(TAG_GEST, "Action was MOVE")
+//                Log.d(TAG_GEST, "("+motionEvent.x+","+motionEvent.y+")")
                 }
                 true
             }
@@ -73,18 +85,44 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
                 mSurfaceDrag.resetIcon()
                 IM_ArrowUP.visibility=ImageView.INVISIBLE
                 IM_ArrowDOWN.visibility=ImageView.INVISIBLE
-                Log.d(TAG, "Action was UP")
+                Log.d(TAG_GEST, "Action was UP")
                 true
             }
             MotionEvent.ACTION_CANCEL -> {
-                Log.d(TAG, "Action was CANCEL")
+                Log.d(TAG_GEST, "Action was CANCEL")
                 true
             }
             MotionEvent.ACTION_OUTSIDE -> {
-                Log.d(TAG, "Movement occurred outside bounds of current screen element")
+                Log.d(TAG_GEST, "Movement occurred outside bounds of current screen element")
                 true
             }
             else -> super.onTouchEvent(motionEvent)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG_DEBUG, "onDestroy")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG_DEBUG, "onStart")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG_DEBUG, "onStop")
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG_DEBUG, "onResume")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG_DEBUG, "onPause")
     }
 }
