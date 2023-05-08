@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-#define WIFI_SSID "Keddom"
+// #define WIFI_SSID "Keddom"
+// #define WIFI_SSID "raw_AP"
+#define WIFI_SSID "multimedia_RawDom"
 #define WIFI_PASS "123ewqasdcxz"
 #define SERVER_PORT 23
 
@@ -18,7 +20,7 @@ void setup() {
   }
 
   WiFi.begin(WIFI_SSID,WIFI_PASS);
-  Serial.println("Starting");
+  Serial.println("\nStarting");
   pinMode(BUILTIN_LED,OUTPUT);
 
 // laczenie sie z siecia lokalna
@@ -30,10 +32,10 @@ void setup() {
       // 192.168.1.23
       connToWiFi = true;
       digitalWrite(LED_BUILTIN,HIGH);
-    }else{
-      Serial.println(".");
+    }else{  
+      Serial.print(".");
       digitalWrite(LED_BUILTIN,!digitalRead(LED_BUILTIN));
-      delay(100);  
+      delay(200);  
     }
   }
 
@@ -50,17 +52,24 @@ Returns the number of bytes available for reading
 (that is, the amount of data that has been written to the client
  by the server it is connected to).
 */
+while(!connToClient){
   WiFiClient client = server.available();
-
+  if(client){
+      connToClient = true;
+      Serial.println("We have a new client");
+  }else{
+    Serial.println("Waiting for client...");
+    delay(500);
+  }
+}
 
   if (client) {
-    if (!connToClient) {
       // clear out the input buffer:
       client.flush();
-      Serial.println("We have a new client");
       client.println("Hello, client!");
-      connToClient = true;
-    }
+      Serial.println("Send to client!");
+    
+    // odczyt danych
     if (client.available() > 0) {
       // read the bytes incoming from the client:
       char thisChar = client.read();
@@ -70,10 +79,10 @@ Returns the number of bytes available for reading
       Serial.write(thisChar);
     }
   }
-  // else{
-  //   Serial.println("Waiting for client...");
-  //   delay(1500);
-  // }
+  else{
+    connToClient=false;
+  }
+    delay(500);
 
 
   

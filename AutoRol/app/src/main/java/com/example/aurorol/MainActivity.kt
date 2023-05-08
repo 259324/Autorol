@@ -12,12 +12,11 @@ import androidx.appcompat.app.AppCompatActivity
 
 
 
-class MainActivity : AppCompatActivity(), OnTouchListener  {
+class MainActivity : AppCompatActivity(), OnTouchListener {
 
-    private val TAG_GEST = "Gest"
+    private val TAG_GEST = "gest"
     private val TAG_DEBUG = "debug"
-
-
+    private val TAG_WIFI = "siec_domowa"
 
 
     private lateinit var mSurfaceDrag: SurfaceDrag
@@ -25,44 +24,42 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
     private lateinit var IM_ArrowUP: ImageView
     private lateinit var IM_ArrowDOWN: ImageView
     private lateinit var dragSV: SurfaceView
+    private lateinit var mWiFiThread: WiFiThread
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG_DEBUG, "onCreate")
         setContentView(R.layout.activity_main)
-
         dragSV = findViewById(R.id.SV_dragIcon)
         dragSV.setOnTouchListener(this)
 
-        mSurfaceDrag = SurfaceDrag(this,dragSV)
-        mSurfaceRol = SurfaceRol(this,findViewById(R.id.SV_rol))
+        mSurfaceDrag = SurfaceDrag(this, dragSV)
+        mSurfaceRol = SurfaceRol(this, findViewById(R.id.SV_rol))
 
         IM_ArrowUP = findViewById(R.id.IV_dragUP)
         IM_ArrowDOWN = findViewById(R.id.IV_dragDOWN)
 
-
-
-
-
-
+        mWiFiThread = WiFiThread()
+        mWiFiThread.start()
 
     }
 
-    var wasCenter =false
+    private var wasCenter = false
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
         return when (motionEvent.action) {
             //Finger touches
             MotionEvent.ACTION_DOWN -> {
                 Log.d(TAG_GEST, "Action was DOWN ")
-                if (motionEvent.y < (dragSV.height/2)+dragSV.width/2 &&  motionEvent.y >(dragSV.height/2)-dragSV.width/2) {
+                if (motionEvent.y < (dragSV.height / 2) + dragSV.width / 2 && motionEvent.y > (dragSV.height / 2) - dragSV.width / 2) {
                     wasCenter = true
                 }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
-                if(wasCenter) {
+                if (wasCenter) {
                     mSurfaceDrag.draw(motionEvent.x, motionEvent.y)
                     if (motionEvent.y < dragSV.height / 3) {
                         IM_ArrowUP.visibility = ImageView.VISIBLE
@@ -79,12 +76,12 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
                 }
                 true
             }
-            //Finger untouches
+            //Finger un touch
             MotionEvent.ACTION_UP -> {
                 wasCenter = false
                 mSurfaceDrag.resetIcon()
-                IM_ArrowUP.visibility=ImageView.INVISIBLE
-                IM_ArrowDOWN.visibility=ImageView.INVISIBLE
+                IM_ArrowUP.visibility = ImageView.INVISIBLE
+                IM_ArrowDOWN.visibility = ImageView.INVISIBLE
                 Log.d(TAG_GEST, "Action was UP")
                 true
             }
@@ -103,17 +100,20 @@ class MainActivity : AppCompatActivity(), OnTouchListener  {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG_DEBUG, "onDestroy")
+        mWiFiThread.interrupt()
     }
 
     override fun onStart() {
         super.onStart()
         Log.d(TAG_DEBUG, "onStart")
+        Log.d(TAG_WIFI, "State: "+mWiFiThread.state.toString())
+        mWiFiThread.resumeThread()
     }
 
     override fun onStop() {
         super.onStop()
         Log.d(TAG_DEBUG, "onStop")
-
+        mWiFiThread.suspendThread()
     }
 
     override fun onResume() {
