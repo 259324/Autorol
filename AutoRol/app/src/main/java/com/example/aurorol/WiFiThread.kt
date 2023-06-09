@@ -11,8 +11,8 @@ class WiFiThread : Thread() {
     private val TAG_WIFI = "siec_domowa"
 
     private val SERVER_PORT = 23
-//    private val SERVER_IP = "192.168.1.23"
-    private val SERVER_IP = "192.168.0.15"
+    private val SERVER_IP = "192.168.1.23"
+//    private val SERVER_IP = "192.168.0.15"
     private lateinit var socket: Socket
 
     init {
@@ -29,8 +29,8 @@ class WiFiThread : Thread() {
         try {
             socket = Socket(SERVER_IP, SERVER_PORT)
             Log.d(TAG_WIFI, "Socket created")
-            var message: String?
-            val input = BufferedReader(InputStreamReader(socket.getInputStream()))
+//            var message: String?
+//            val input = BufferedReader(InputStreamReader(socket.getInputStream()))
 
 
 
@@ -38,7 +38,7 @@ class WiFiThread : Thread() {
             synchronized(lock) {
                 while (isPaused) {
                     try {
-//                        Log.d(TAG_WIFI, "suspended")
+                        Log.d(TAG_WIFI, "suspended")
                         lock.wait()
                         Log.d(TAG_WIFI, "State: "+ currentThread().state.toString())
                     } catch (e: InterruptedException) {
@@ -47,15 +47,17 @@ class WiFiThread : Thread() {
                     }
                 }
             }
-            message = input.readLine()
-            if (message != null) {
-                // Odebranie wiadomości od serwera
-                Log.d(TAG_WIFI, "Received message: $message")
-            } else {
-                // Przerwanie wątku w przypadku błędu lub zerwania połączenia
-//                Log.e(TAG_WIFI, "Connection closed, thread interrupted")
-//                interrupt()
-            }
+            val out = OutputStreamWriter(socket.getOutputStream())
+
+//            message = input.readLine()
+//            if (message != null) {
+//                // Odebranie wiadomości od serwera
+//                Log.d(TAG_WIFI, "Received message: $message")
+//            } else {
+//                // Przerwanie wątku w przypadku błędu lub zerwania połączenia
+////                Log.e(TAG_WIFI, "Connection closed, thread interrupted")
+////                interrupt()
+//            }
 //            val out = OutputStreamWriter(socket.getOutputStream())
 //            val `in` = BufferedReader(InputStreamReader(socket.getInputStream())).toString()
 

@@ -1,29 +1,95 @@
 package com.example.aurorol
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.Log
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import kotlin.properties.Delegates
+import android.view.View
+import android.widget.ImageView
 
-class SurfaceDrag(context: Context, surfaceView_: SurfaceView) : SurfaceView(context), SurfaceHolder.Callback {
+@SuppressLint("ClickableViewAccessibility")
+class SurfaceDrag(context: Context,sv : SurfaceView,up :ImageView, down: ImageView) : SurfaceView(context), SurfaceHolder.Callback, View.OnTouchListener {
 
     private val TAG = "SurDrag"
-    private val surfaceView = surfaceView_
-    private var surfaceHolder: SurfaceHolder= surfaceView.holder
+    private val TAG_GEST = "gest"
+    private val surfaceView: SurfaceView
+    private var IM_ArrowUP: ImageView
+    private var IM_ArrowDOWN: ImageView
 
     init {
     Log.e(TAG, "init")
-    surfaceView.setZOrderOnTop(true)
-    surfaceView.holder.addCallback(this)
-    surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
+//        surfaceView = findViewById(R.id.SV_dragIcon)
+        surfaceView = sv
+        surfaceView.setZOrderOnTop(true)
+        surfaceView.holder.addCallback(this)
+        surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
+        surfaceView.setOnTouchListener(this)
 
+        IM_ArrowUP = up
+        IM_ArrowDOWN = down
+//        IM_ArrowUP = findViewById(R.id.IV_dragUP)
+//        IM_ArrowDOWN = findViewById(R.id.IV_dragDOWN)
+
+    }
+
+    private var wasCenter = false
+
+    override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
+        val dragSV = surfaceView
+        return when (motionEvent.action) {
+            //Finger touches
+            MotionEvent.ACTION_DOWN -> {
+                Log.d(TAG_GEST, "Action was DOWN ")
+                if (motionEvent.y < (dragSV.height / 2) + dragSV.width / 2 && motionEvent.y > (dragSV.height / 2) - dragSV.width / 2) {
+                    wasCenter = true
+                }
+                true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (wasCenter) {
+                    draw(motionEvent.x, motionEvent.y)
+                    if (motionEvent.y < dragSV.height / 3) {
+                        IM_ArrowUP.visibility = ImageView.VISIBLE
+                    } else {
+                        IM_ArrowUP.visibility = ImageView.INVISIBLE
+                    }
+                    if (motionEvent.y > (dragSV.height * 2 / 3)) {
+                        IM_ArrowDOWN.visibility = ImageView.VISIBLE
+                    } else {
+                        IM_ArrowDOWN.visibility = ImageView.INVISIBLE
+                    }
+//                Log.d(TAG_GEST, "Action was MOVE")
+//                Log.d(TAG_GEST, "("+motionEvent.x+","+motionEvent.y+")")
+                }
+                true
+            }
+            //Finger un touch
+            MotionEvent.ACTION_UP -> {
+                wasCenter = false
+                resetIcon()
+                IM_ArrowUP.visibility = ImageView.INVISIBLE
+                IM_ArrowDOWN.visibility = ImageView.INVISIBLE
+                Log.d(TAG_GEST, "Action was UP")
+                true
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                Log.d(TAG_GEST, "Action was CANCEL")
+                true
+            }
+            MotionEvent.ACTION_OUTSIDE -> {
+                Log.d(TAG_GEST, "Movement occurred outside bounds of current screen element")
+                true
+            }
+            else -> super.onTouchEvent(motionEvent)
+        }
     }
 
     fun draw(x :Float,y:Float) {
 //        Log.e(TAG, "draw")
-        val canvas = surfaceHolder.lockCanvas()
+        val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
 //            Log.e(TAG, "canva ok")
             val paint = Paint()
@@ -31,7 +97,7 @@ class SurfaceDrag(context: Context, surfaceView_: SurfaceView) : SurfaceView(con
             val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.width,false)
             canvas.drawColor(0,PorterDuff.Mode.CLEAR)
             canvas.drawBitmap(bitmapReSized, x-(surfaceView.width/2), y-(surfaceView.width/2), paint)
-            surfaceHolder.unlockCanvasAndPost(canvas)
+            surfaceView.holder.unlockCanvasAndPost(canvas)
         }else{
 //            Log.e(TAG, "canva == NULL")
         }
@@ -39,7 +105,7 @@ class SurfaceDrag(context: Context, surfaceView_: SurfaceView) : SurfaceView(con
 
     fun resetIcon(){
         Log.e(TAG, "resetIcon")
-        val canvas = surfaceHolder.lockCanvas()
+        val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
             Log.e(TAG, "canva ok")
             val paint = Paint()
@@ -47,7 +113,7 @@ class SurfaceDrag(context: Context, surfaceView_: SurfaceView) : SurfaceView(con
             val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.width,false)
             canvas.drawColor(0,PorterDuff.Mode.CLEAR)
             canvas.drawBitmap(bitmapReSized, 0f, (surfaceView.height.toFloat()/2)-(surfaceView.width/2), paint)
-            surfaceHolder.unlockCanvasAndPost(canvas)
+            surfaceView.holder.unlockCanvasAndPost(canvas)
         }else{
             Log.e(TAG, "canva == NULL")
         }

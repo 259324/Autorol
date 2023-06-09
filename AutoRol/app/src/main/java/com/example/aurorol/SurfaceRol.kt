@@ -6,15 +6,14 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 
-class SurfaceRol(context: Context, surfaceView_: SurfaceView) : SurfaceView(context), SurfaceHolder.Callback {
+class SurfaceRol(context: Context) : SurfaceView(context), SurfaceHolder.Callback {
 
     private val TAG = "SurRol"
-    private val surfaceView = surfaceView_
-    private var surfaceHolder: SurfaceHolder= surfaceView.holder
+    private val surfaceView: SurfaceView
 
     init {
         Log.e(TAG, "init")
-
+        surfaceView = findViewById(R.id.SV_rol)
         surfaceView.setZOrderOnTop(true)
         surfaceView.holder.addCallback(this)
         surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
@@ -22,7 +21,7 @@ class SurfaceRol(context: Context, surfaceView_: SurfaceView) : SurfaceView(cont
 
     private fun draw() {
         Log.e(TAG, "draw")
-        val canvas = surfaceHolder.lockCanvas()
+        val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
             Log.e(TAG, "canva ok")
             val paint = Paint()
@@ -30,7 +29,7 @@ class SurfaceRol(context: Context, surfaceView_: SurfaceView) : SurfaceView(cont
             val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.width,false)
             canvas.drawColor(0, PorterDuff.Mode.CLEAR)
             canvas.drawBitmap(bitmapReSized, 0f, 0f, paint)
-            surfaceHolder.unlockCanvasAndPost(canvas)
+            surfaceView.holder.unlockCanvasAndPost(canvas)
         }else{
             Log.e(TAG, "canva == NULL")
         }
