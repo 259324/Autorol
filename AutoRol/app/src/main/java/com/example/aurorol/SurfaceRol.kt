@@ -6,14 +6,12 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 
-class SurfaceRol(context: Context) : SurfaceView(context), SurfaceHolder.Callback {
+class SurfaceRol(context: Context, private val surfaceView: SurfaceView ) : SurfaceView(context), SurfaceHolder.Callback {
 
     private val TAG = "SurRol"
-    private val surfaceView: SurfaceView
 
     init {
         Log.e(TAG, "init")
-        surfaceView = findViewById(R.id.SV_rol)
         surfaceView.setZOrderOnTop(true)
         surfaceView.holder.addCallback(this)
         surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
@@ -25,8 +23,8 @@ class SurfaceRol(context: Context) : SurfaceView(context), SurfaceHolder.Callbac
         if (canvas != null) {
             Log.e(TAG, "canva ok")
             val paint = Paint()
-            val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.drag_icon)
-            val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.width,false)
+            val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.window)
+            val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.height,false)
             canvas.drawColor(0, PorterDuff.Mode.CLEAR)
             canvas.drawBitmap(bitmapReSized, 0f, 0f, paint)
             surfaceView.holder.unlockCanvasAndPost(canvas)
@@ -36,16 +34,16 @@ class SurfaceRol(context: Context) : SurfaceView(context), SurfaceHolder.Callbac
     }
 
     override fun surfaceCreated(p0: SurfaceHolder) {
-        Log.e(TAG, "surfaceCreated")
-//        draw()
+        Log.d(TAG, "surfaceCreated")
+        draw()
     }
 
     override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
-        Log.e(TAG, "surfaceChanged")
+        Log.d(TAG, "surfaceChanged")
     }
 
     override fun surfaceDestroyed(p0: SurfaceHolder) {
-        Log.e(TAG, "surfaceDestroyed")
+        Log.d(TAG, "surfaceDestroyed")
     }
 
 

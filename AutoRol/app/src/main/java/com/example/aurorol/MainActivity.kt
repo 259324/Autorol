@@ -10,12 +10,12 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private val TAG_DEBUG = "debug"
-    private val TAG_WIFI = "siec_domowa"
 
 
     private lateinit var mSurfaceDrag: SurfaceDrag
     private lateinit var mSurfaceRol: SurfaceRol
     private lateinit var mWiFiThread: WiFiThread
+    private lateinit var mWiFiInterface: WiFiInterface
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,12 +23,14 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG_DEBUG, "onCreate")
         setContentView(R.layout.activity_main)
 
+        mWiFiThread = WiFiThread()
+        mWiFiInterface = mWiFiThread
 
-        mSurfaceDrag = SurfaceDrag(applicationContext,findViewById(R.id.SV_dragIcon),findViewById(R.id.IV_dragUP),findViewById(R.id.IV_dragDOWN))
-//        mSurfaceRol = SurfaceRol(applicationContext)
 
-//        mWiFiThread = WiFiThread()
-//        mWiFiThread.start()
+        mSurfaceDrag = SurfaceDrag(applicationContext,findViewById(R.id.SV_dragIcon),
+            findViewById(R.id.IV_dragUP),findViewById(R.id.IV_dragDOWN),mWiFiInterface)
+        mSurfaceRol = SurfaceRol(applicationContext,findViewById(R.id.SV_rol))
+        mWiFiThread.start()
 
     }
 

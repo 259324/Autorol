@@ -1,53 +1,60 @@
 package com.example.aurorol
 
 import android.util.Log
-import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
+import java.io.OutputStream
 import java.net.Socket
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
-class WiFiThread : Thread() {
+class WiFiThread() : Thread(), WiFiInterface {
     private val TAG_WIFI = "siec_domowa"
 
     private val SERVER_PORT = 23
     private val SERVER_IP = "192.168.1.23"
 //    private val SERVER_IP = "192.168.0.15"
-    private lateinit var socket: Socket
+    private var socket: Socket? = null
+    private lateinit var outputStream: OutputStream
+    private var isPaused = false
+    private val lock = Object()
+    private val mutex: Lock = ReentrantLock()
+    private var rollAction = 0
 
     init {
         Log.d(TAG_WIFI, "WiFiInterface init")
-//        socket = Socket(SERVER_IP, SERVER_PORT)
     }
-
-    private var isPaused = false
-    private val lock = Object()
-
 
     override fun run() {
         Log.d(TAG_WIFI, "WiFi Thread start")
-        try {
-            socket = Socket(SERVER_IP, SERVER_PORT)
-            Log.d(TAG_WIFI, "Socket created")
-//            var message: String?
+        while (true){
+            try {
+                socket = Socket(SERVER_IP, SERVER_PORT)
+                Log.d(TAG_WIFI, "Socket created")
+                outputStream = socket!!.getOutputStream()
+                while (socket!!.isConnected){
+                    //            var message: String?
 //            val input = BufferedReader(InputStreamReader(socket.getInputStream()))
 
 
 
-            while (!currentThread().isInterrupted) {
-            synchronized(lock) {
-                while (isPaused) {
-                    try {
-                        Log.d(TAG_WIFI, "suspended")
-                        lock.wait()
-                        Log.d(TAG_WIFI, "State: "+ currentThread().state.toString())
-                    } catch (e: InterruptedException) {
-                        Log.e(TAG_WIFI, "err1 $e")
-                        currentThread().interrupt()
+//            while (!currentThread().isInterrupted) {
+//            synchronized(lock) {
+//                while (isPaused) {
+//                    try {
+//                        Log.d(TAG_WIFI, "suspended")
+//                        lock.wait()
+//                        Log.d(TAG_WIFI, "State: "+ currentThread().state.toString())
+//                    } catch (e: InterruptedException) {
+//                        Log.e(TAG_WIFI, "err1 $e")
+//                        currentThread().interrupt()
+//                    }
+//                }
+//            }
+                    if(newRollAction()){
+                        outputStream.write(rollAction)
+                        outputStream.flush()
+                        Log.d(TAG_WIFI, rollAction.toString())
                     }
-                }
-            }
-            val out = OutputStreamWriter(socket.getOutputStream())
 
 //            message = input.readLine()
 //            if (message != null) {
@@ -61,12 +68,21 @@ class WiFiThread : Thread() {
 //            val out = OutputStreamWriter(socket.getOutputStream())
 //            val `in` = BufferedReader(InputStreamReader(socket.getInputStream())).toString()
 
+//        }
+//                    Log.d(TAG_WIFI, "WiFi Thread stop")
+                }
+
+            } catch (e: IOException) {
+                Log.e(TAG_WIFI, "Failed creating socket $e")
+                Log.d(TAG_WIFI, "WiFi Thread stop")
+            }
+
+
         }
-            Log.d(TAG_WIFI, "WiFi Thread stop")
-        } catch (e: IOException) {
-            Log.e(TAG_WIFI, "Failed creating socket $e")
-            Log.d(TAG_WIFI, "WiFi Thread stop")
-        }
+
+
+
+
     }
 
     fun suspendThread() {
@@ -88,7 +104,27 @@ class WiFiThread : Thread() {
             Log.w(TAG_WIFI, "resuming failed")
 
     }
+    private var prevRollAction = 2
+    private fun newRollAction():Boolean{
+        mutex.lock()
+        return if(rollAction != prevRollAction) {
+            prevRollAction = rollAction
+            mutex.unlock()
+            true
+        }else{
+            mutex.unlock()
+            false
+        }
+    }
 
+    override fun roll(rollAction_: Int) {
+        mutex.lock()
+        rollAction=rollAction_
+        mutex.unlock()
+    }
+
+
+//
 //    fun isClosed(): Boolean {
 //        return if(socket.isClosed){
 //            Log.d(TAG_WIFI, "Socket is Closed")

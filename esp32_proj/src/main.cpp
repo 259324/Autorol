@@ -6,6 +6,11 @@
 // #define WIFI_SSID "multimedia_RawDom"
 #define WIFI_PASS "123ewqasdcxz"
 #define SERVER_PORT 23
+#define UP 19
+#define STOP 18
+#define DOWN 17
+#define STEP 21
+
 
 WiFiServer server(SERVER_PORT);
 WiFiClient client;
@@ -13,7 +18,17 @@ WiFiClient client;
 bool connToWiFi = false;
 bool connToClient = false;// whether or not the client was connected previously
 
+int pins[] = { 17,18,19 };
+
 void setup() {
+
+  for (int i = 0;i < 3;i++) {
+    pinMode(pins[i], OUTPUT);
+    digitalWrite(pins[i], LOW);
+  }
+  pinMode(STEP, OUTPUT);
+
+
   Serial.begin(921600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -40,58 +55,71 @@ void setup() {
     }
   }
 
+
   // start the server:
   server.begin();
+
+
 
 }
 
 
 void loop() {
 
-  /*
-  Returns the number of bytes available for reading
-  (that is, the amount of data that has been written to the client
-   by the server it is connected to).
-  */
-  while (!connToClient) {
-    WiFiClient client = server.available();
-    if (client) {
-      connToClient = true;
-      Serial.println("We have a new client");
-    }
-    else {
-      Serial.print('.');
-      delay(500);
-      if (client) {
-        Serial.print('J');
-      }
-    }
+  for (int i = 0;i < 200;i++) {
+    digitalWrite(STEP, HIGH);
+    delayMicroseconds(2000);
+    digitalWrite(STEP, LOW);
+    delayMicroseconds(2000);
+
   }
 
-  if (client) {
-    // clear out the input buffer:
-    client.flush();
-    client.println("Hello, client!");
-    Serial.println("Send to client!");
+  // while (!connToClient) {
+  //   client = server.available();
+  //   if (client) {
 
-    // odczyt danych
-    if (client.available() > 0) {
-      // read the bytes incoming from the client:
-      char thisChar = client.read();
-      // echo the bytes back to the client:
-      server.write(thisChar);
-      // echo the bytes to the server as well:
-      Serial.write(thisChar);
-    }
-  }
-  else {
-    connToClient = false;
-    Serial.println("client lost!");
-  }
-  delay(500);
+  //     connToClient = true;
+  //     Serial.println("We have a new client");
+  //   }
+  //   else {
+  //     Serial.print('.');
+  //     for (int i = 0;i < 3;i++) {
+  //       digitalWrite(pins[i], !digitalRead(pins[i]));
+  //     }
+  //     delay(500);
+  //   }
+  // }
 
+  // if (client.connected()) {
+  //   // clear out the input buffer:
+  //   // client.flush();
+  //   // client.println("Hello, client!");
+  //   // Serial.println("Send to client!");
 
-
+  //   // odczyt danych
+  //   while (client.available() > 0)
+  //   {
+  //     int c = client.read();
+  //     Serial.print(c);
+  //     if (c == 2) {
+  //       digitalWrite(UP, 1);
+  //       digitalWrite(STOP, 0);
+  //     }
+  //     else if (c == 0) {
+  //       digitalWrite(UP, 0);
+  //       digitalWrite(STOP, 1);
+  //       digitalWrite(DOWN, 0);
+  //     }
+  //     else if (c == 1) {
+  //       digitalWrite(DOWN, 1);
+  //       digitalWrite(STOP, 0);
+  //     }
+  //   }
+  // }
+  // else {
+  //   connToClient = false;
+  //   Serial.println("client lost!");
+  // }
 }
 
 /*

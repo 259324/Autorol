@@ -11,28 +11,19 @@ import android.view.View
 import android.widget.ImageView
 
 @SuppressLint("ClickableViewAccessibility")
-class SurfaceDrag(context: Context,sv : SurfaceView,up :ImageView, down: ImageView) : SurfaceView(context), SurfaceHolder.Callback, View.OnTouchListener {
+class SurfaceDrag(private val context: Context, private val surfaceView : SurfaceView,
+                  private val IM_ArrowUP :ImageView, private val IM_ArrowDOWN: ImageView,
+                  private val WiFi: WiFiInterface)
+                : SurfaceView(context), SurfaceHolder.Callback, View.OnTouchListener {
 
     private val TAG = "SurDrag"
     private val TAG_GEST = "gest"
-    private val surfaceView: SurfaceView
-    private var IM_ArrowUP: ImageView
-    private var IM_ArrowDOWN: ImageView
-
     init {
     Log.e(TAG, "init")
-//        surfaceView = findViewById(R.id.SV_dragIcon)
-        surfaceView = sv
         surfaceView.setZOrderOnTop(true)
         surfaceView.holder.addCallback(this)
         surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
         surfaceView.setOnTouchListener(this)
-
-        IM_ArrowUP = up
-        IM_ArrowDOWN = down
-//        IM_ArrowUP = findViewById(R.id.IV_dragUP)
-//        IM_ArrowDOWN = findViewById(R.id.IV_dragDOWN)
-
     }
 
     private var wasCenter = false
@@ -43,24 +34,40 @@ class SurfaceDrag(context: Context,sv : SurfaceView,up :ImageView, down: ImageVi
             //Finger touches
             MotionEvent.ACTION_DOWN -> {
                 Log.d(TAG_GEST, "Action was DOWN ")
+                WiFi.roll(0)
                 if (motionEvent.y < (dragSV.height / 2) + dragSV.width / 2 && motionEvent.y > (dragSV.height / 2) - dragSV.width / 2) {
                     wasCenter = true
                 }
                 true
             }
             MotionEvent.ACTION_MOVE -> {
-                if (wasCenter) {
-                    draw(motionEvent.x, motionEvent.y)
+                if (wasCenter) {draw(motionEvent.x, motionEvent.y)
+
                     if (motionEvent.y < dragSV.height / 3) {
+                        if (IM_ArrowUP.visibility == ImageView.INVISIBLE) {
+                            WiFi.roll(2)
+                        }
                         IM_ArrowUP.visibility = ImageView.VISIBLE
                     } else {
+                        if (IM_ArrowUP.visibility == ImageView.VISIBLE) {
+                            WiFi.roll(0)
+                        }
                         IM_ArrowUP.visibility = ImageView.INVISIBLE
                     }
+
+
                     if (motionEvent.y > (dragSV.height * 2 / 3)) {
+                        if (IM_ArrowDOWN.visibility == ImageView.INVISIBLE) {
+                            WiFi.roll(1)
+                        }
                         IM_ArrowDOWN.visibility = ImageView.VISIBLE
                     } else {
-                        IM_ArrowDOWN.visibility = ImageView.INVISIBLE
+                        if (IM_ArrowDOWN.visibility == ImageView.VISIBLE) {
+                            WiFi.roll(0)
+                        }
+                            IM_ArrowDOWN.visibility = ImageView.INVISIBLE
                     }
+
 //                Log.d(TAG_GEST, "Action was MOVE")
 //                Log.d(TAG_GEST, "("+motionEvent.x+","+motionEvent.y+")")
                 }
@@ -70,16 +77,31 @@ class SurfaceDrag(context: Context,sv : SurfaceView,up :ImageView, down: ImageVi
             MotionEvent.ACTION_UP -> {
                 wasCenter = false
                 resetIcon()
+
+                Log.d(TAG_GEST, "Action was UP")
+
+                if (motionEvent.y > (dragSV.height * 2 / 3)) {
+                    if (IM_ArrowDOWN.visibility == ImageView.VISIBLE){
+                        WiFi.roll(1)
+                    }
+                }
+                if (motionEvent.y < dragSV.height / 3) {
+                    if (IM_ArrowUP.visibility == ImageView.VISIBLE) {
+                        WiFi.roll(2)
+                    }
+                }
                 IM_ArrowUP.visibility = ImageView.INVISIBLE
                 IM_ArrowDOWN.visibility = ImageView.INVISIBLE
-                Log.d(TAG_GEST, "Action was UP")
+
                 true
             }
             MotionEvent.ACTION_CANCEL -> {
+                WiFi.roll(0)
                 Log.d(TAG_GEST, "Action was CANCEL")
                 true
             }
             MotionEvent.ACTION_OUTSIDE -> {
+                WiFi.roll(0)
                 Log.d(TAG_GEST, "Movement occurred outside bounds of current screen element")
                 true
             }
