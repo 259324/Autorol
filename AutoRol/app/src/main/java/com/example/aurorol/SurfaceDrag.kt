@@ -109,7 +109,7 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
         }
     }
 
-    fun draw(x :Float,y:Float) {
+    private fun draw(x :Float, y:Float) {
 //        Log.e(TAG, "draw")
         val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
@@ -129,7 +129,7 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
         Log.e(TAG, "resetIcon")
         val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
-            Log.e(TAG, "canva ok")
+//            Log.e(TAG, "canva ok")
             val paint = Paint()
             val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.drag_icon)
             val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.width,false)
@@ -141,6 +141,9 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
         }
     }
 
+    fun inv(){surfaceView.visibility=View.INVISIBLE}
+    fun vis(){surfaceView.visibility=View.VISIBLE}
+
     override fun surfaceCreated(p0: SurfaceHolder) {
         Log.e(TAG, "surfaceCreated")
         resetIcon()
@@ -148,7 +151,7 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
 
     override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
         Log.e(TAG, "surfaceChanged")
-        resetIcon()
+//        resetIcon()
     }
 
     override fun surfaceDestroyed(p0: SurfaceHolder) {

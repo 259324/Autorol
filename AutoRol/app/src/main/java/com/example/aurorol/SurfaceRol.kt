@@ -3,8 +3,12 @@ package com.example.aurorol
 import android.content.Context
 import android.graphics.*
 import android.util.Log
+import android.view.RoundedCorner
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 
 class SurfaceRol(context: Context, private val surfaceView: SurfaceView ) : SurfaceView(context), SurfaceHolder.Callback {
 
@@ -17,25 +21,39 @@ class SurfaceRol(context: Context, private val surfaceView: SurfaceView ) : Surf
         surfaceView.holder.setFormat(PixelFormat.TRANSPARENT)
     }
 
-    private fun draw() {
+
+    fun draw(rollOut: Double) {
+        //proporcje szyby do ramy wyswietlanego okna (poziom,pion)
+        val prop = arrayOf(11,17)
         Log.e(TAG, "draw")
         val canvas = surfaceView.holder.lockCanvas()
         if (canvas != null) {
             Log.e(TAG, "canva ok")
-            val paint = Paint()
-            val bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.window)
-            val bitmapReSized = Bitmap.createScaledBitmap(bitmap,surfaceView.width,surfaceView.height,false)
-            canvas.drawColor(0, PorterDuff.Mode.CLEAR)
-            canvas.drawBitmap(bitmapReSized, 0f, 0f, paint)
+            val paint = Paint().apply {
+                color = context.resources.getColor(R.color.grey)
+                isAntiAlias = true
+            }
+            canvas.drawColor(0,PorterDuff.Mode.CLEAR)
+
+            val rectF = RectF((surfaceView.width/prop[0])+0f,
+                (surfaceView.height/prop[1])+0f,
+                (surfaceView.width-(surfaceView.width/prop[0]))+0f,
+                ((surfaceView.height-(surfaceView.height/prop[1]))*rollOut).toFloat()
+            )
+
+            canvas.drawRoundRect(rectF, 40f, 40f, paint)
             surfaceView.holder.unlockCanvasAndPost(canvas)
         }else{
             Log.e(TAG, "canva == NULL")
         }
     }
 
+    fun inv(){surfaceView.visibility=View.INVISIBLE}
+    fun vis(){surfaceView.visibility=View.VISIBLE}
+
     override fun surfaceCreated(p0: SurfaceHolder) {
         Log.d(TAG, "surfaceCreated")
-        draw()
+//        draw(0.6)
     }
 
     override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
