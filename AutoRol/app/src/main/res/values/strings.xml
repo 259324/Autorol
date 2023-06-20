@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AutoRol</string>
+    <string name="max_zwiniecie">Max. zwinięcie</string>
+    <string name="max_rozwiniecie">Max. rozwinięcie</string>
+    <string name="max_zwiniecieAKT">Max. zwinięcie AKTYWNE</string>
+    <string name="max_rozwiniecieAKT">Max. rozwinięcie AKTYWNE</string>
 </resources>

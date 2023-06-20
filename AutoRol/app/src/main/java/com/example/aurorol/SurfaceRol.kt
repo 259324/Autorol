@@ -35,10 +35,12 @@ class SurfaceRol(context: Context, private val surfaceView: SurfaceView ) : Surf
             }
             canvas.drawColor(0,PorterDuff.Mode.CLEAR)
 
-            val rectF = RectF((surfaceView.width/prop[0])+0f,
-                (surfaceView.height/prop[1])+0f,
-                (surfaceView.width-(surfaceView.width/prop[0]))+0f,
-                ((surfaceView.height-(surfaceView.height/prop[1]))*rollOut).toFloat()
+            val ramaGD = surfaceView.height/prop[1]
+            val ramaLP = surfaceView.width/prop[0]
+
+            val rectF = RectF((ramaLP)+0f,(ramaGD)+0f,
+                (surfaceView.width-(ramaLP))+0f,
+                (ramaGD+(surfaceView.height-ramaGD-ramaGD)*rollOut).toFloat()+0f
             )
 
             canvas.drawRoundRect(rectF, 40f, 40f, paint)

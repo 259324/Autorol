@@ -34,9 +34,9 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
             //Finger touches
             MotionEvent.ACTION_DOWN -> {
                 Log.d(TAG_GEST, "Action was DOWN ")
-                WiFi.roll(0)
                 if (motionEvent.y < (dragSV.height / 2) + dragSV.width / 2 && motionEvent.y > (dragSV.height / 2) - dragSV.width / 2) {
                     wasCenter = true
+                    WiFi.roll(0)
                 }
                 true
             }
@@ -90,8 +90,7 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
                         WiFi.roll(2)
                     }
                 }
-                IM_ArrowUP.visibility = ImageView.INVISIBLE
-                IM_ArrowDOWN.visibility = ImageView.INVISIBLE
+
 
                 true
             }
@@ -146,6 +145,7 @@ class SurfaceDrag(private val context: Context, private val surfaceView : Surfac
 
     override fun surfaceCreated(p0: SurfaceHolder) {
         Log.e(TAG, "surfaceCreated")
+        WiFi.roll(0)
         resetIcon()
     }
 

@@ -1,25 +1,29 @@
 package com.example.aurorol
 
-import android.app.PendingIntent.getActivity
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import java.io.*
 import java.net.Socket
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
 
 class WiFiThread(private val mainActivity: MainActivity) : Thread(), WiFiInterface {
     private val TAG_WIFI = "siec_domowa"
 
     private val SERVER_PORT = 23
-    private val SERVER_IP = "192.168.1.23"
-//    private val SERVER_IP = "192.168.0.15"
+    private val SERVER_IP = "192.168.131.41" //poco
+//    private val SERVER_IP = "192.168.1.23" //keddom
+//    private val SERVER_IP = "192.168.0.15" / raw_ap
     private lateinit var socket: Socket
     private var isPaused = false
-    private val mutex: Lock = ReentrantLock()
-    private var rollAction = 0
+//    private val mutex: Lock = ReentrantLock()
     private val handler = Handler(Looper.getMainLooper())
+
+//    var kalibRoz_start = false
+//    var kalibRoz_stop = false
+//    var kalibZwin_start = false
+//    var kalibZwin_stop = false
+    private var rollAction = 0
+    private var MAXstep = 0.0
 
     var msg =""
     init {
@@ -46,12 +50,60 @@ class WiFiThread(private val mainActivity: MainActivity) : Thread(), WiFiInterfa
                     mainActivity.onConnected()
                 }
                 Log.e(TAG_WIFI, "Connected")
+                // oczekiwanie na informacje o MAXstep
+                while (inputStream.available()<1){}
+                    if(inputStream.available()>0){
+                        var i :Int
+                        msg=""
+
+                        while(inputStream.available()>0){
+                            val c = inputStream.read()
+                            i = c - 48
+                            if(i>-1){
+                                msg+=i.toString()
+                            }else {
+                                if(!msg.isEmpty()){
+                                        MAXstep = msg.toDouble()
+                                        Log.d(TAG_WIFI, "MAXstep = $msg")
+                                }
+                            }
+                        }
+                }
+                while (inputStream.available()<1){}
+                if(inputStream.available()>0){
+                    var i :Int
+                    msg=""
+
+                    while(inputStream.available()>0){
+                        val c = inputStream.read()
+                        i = c - 48
+                        if(i>-1){
+                            msg+=i.toString()
+                        }else {
+                            if(!msg.isEmpty()){
+                                    mainActivity.draw(msg.toDouble()/MAXstep)
+                                    Log.d(TAG_WIFI, "init z = $msg")
+                            }
+                        }
+                    }
+                }
+
                 while (socket.isConnected){
 
+//                    if(kalibRoz){
+//                        outputStream.write(3)
+//                        outputStream.flush()
+//                        Log.d(TAG_WIFI,"kalibRoz" )
+//                    }
+//                    else if(kalibZwin){
+//                        outputStream.write(4)
+//                        outputStream.flush()
+//                        Log.d(TAG_WIFI,"kalibZwin" )
+//                    }
                     if(newRollAction()){
                         outputStream.write(rollAction)
                         outputStream.flush()
-                        Log.d(TAG_WIFI, rollAction.toString())
+                        Log.e(TAG_WIFI, "Action $rollAction")
 
                         timedOut=0
                         while (inputStream.available()<1){
@@ -76,22 +128,35 @@ class WiFiThread(private val mainActivity: MainActivity) : Thread(), WiFiInterfa
 
                         while(inputStream.available()>0){
                             val c = inputStream.read()
-                            i = c - 48
-                            if(i>-1){
-                                msg+=i.toString()
-                            }else {
-                                Log.d(TAG_WIFI, "z = $msg")
-                                if(!msg.isEmpty()){
-                                    mainActivity.draw(msg.toDouble()+1)
-                                }
-                                msg=""
+                            if(c==45){
+                                msg+="-"
+                                Log.d(TAG_WIFI, "minus")
+                            }else{
+                                i = c - 48
+                                if(i>-1){
+                                    msg+=i.toString()
+                                }else {
+                                    Log.d(TAG_WIFI, "z = $msg")
+                                    if(!msg.isEmpty()){
+                                        if(msg.toDouble()<0){
+                                            MAXstep = -msg.toDouble()
+                                            Log.d(TAG_WIFI, "MAXstep = $MAXstep")
+                                            mainActivity.draw(1.0)
+                                        }else{
+                                            mainActivity.draw(msg.toDouble()/MAXstep)
+                                        }
+                                    }
+                                    msg=""
 
+                                }
                             }
+
                         }
                     }
 
                 }
                 Log.e(TAG_WIFI, "Disconnected")
+
 
             } catch (e: IOException) {
                 Log.e(TAG_WIFI, "Failed creating socket $e")
@@ -121,21 +186,21 @@ class WiFiThread(private val mainActivity: MainActivity) : Thread(), WiFiInterfa
 //    }
     private var prevRollAction = 2
     private fun newRollAction():Boolean{
-        mutex.lock()
+//        mutex.lock()
         return if(rollAction != prevRollAction) {
             prevRollAction = rollAction
-            mutex.unlock()
+//            mutex.unlock()
             true
         }else{
-            mutex.unlock()
+//            mutex.unlock()
             false
         }
     }
 
-    override fun roll(rollAction_: Int) {
-        mutex.lock()
-        rollAction=rollAction_
-        mutex.unlock()
+    override fun roll(rollAction: Int) {
+//        mutex.lock()
+        this.rollAction =rollAction
+//        mutex.unlock()
     }
 
 

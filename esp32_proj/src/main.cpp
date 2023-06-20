@@ -1,20 +1,23 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-#define WIFI_SSID "Keddom"
+#define WIFI_SSID "POCO"
+// #define WIFI_SSID "Keddom"
 // #define WIFI_SSID "raw_AP"
 // #define WIFI_SSID "multimedia_RawDom"
 #define WIFI_PASS "123ewqasdcxz"
 #define SERVER_PORT 23
-#define UP 19
-#define STOP 18
-#define DOWN 17
-#define STEP 21
+
+#define LED_UP 32 
+#define LED_STOP 33 
+#define LED_DOWN 25 
+#define STEP 26
 #define SLEEP 27
-#define DIR 26
-#define LIGHT_SENS1 34
-#define LIGHT_SENS2 35
-#define MAX_STEP 1000
+#define DIR 13
+
+#define LIGHT_SENS2 36
+#define LIGHT_SENS1 39
+
 #define STEP_SPEED 4000
 
 WiFiServer server(SERVER_PORT);
@@ -23,32 +26,37 @@ WiFiClient client;
 bool connToWiFi = false;
 bool connToClient = false;// whether or not the client was connected previously
 
-int pins[] = { 17,18,19 };
+int pins[] = { LED_UP,LED_STOP,LED_DOWN,STEP,SLEEP,DIR,BUILTIN_LED };
+
 int rolling = 0;
 int step = 0;
+int MAXstep = 1000;
+
+bool kalibRoz = false;
+bool kalibZwin = false;
+bool trybAuto = false;
+int trybAuto_pom = 0;
+int b = B00000000;
+int trybAuto_delay = 0;
+
+
 
 void setup() {
-
-  for (int i = 0;i < 3;i++) {
-    pinMode(pins[i], OUTPUT);
-    digitalWrite(pins[i], LOW);
-  }
-  pinMode(STEP, OUTPUT);
-  pinMode(SLEEP, OUTPUT);
-  pinMode(DIR, OUTPUT);
-  pinMode(LIGHT_SENS1, INPUT);
-  pinMode(LIGHT_SENS2, INPUT);
-  digitalWrite(SLEEP, HIGH);
-
 
   Serial.begin(921600);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
+  for (int i = 0;i < sizeof(pins) / sizeof(int);i++) {
+    pinMode(pins[i], OUTPUT);
+    digitalWrite(pins[i], HIGH);
+  }
+  pinMode(LIGHT_SENS1, INPUT);
+  pinMode(LIGHT_SENS2, INPUT);
+
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.println("\nStarting");
-  pinMode(BUILTIN_LED, OUTPUT);
 
   // laczenie sie z siecia lokalna
   while (!connToWiFi)
@@ -58,11 +66,10 @@ void setup() {
       Serial.println(WiFi.localIP());
       // 192.168.1.23
       connToWiFi = true;
-      digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(BUILTIN_LED, HIGH);
     }
     else {
       Serial.print(".");
-      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
       delay(200);
     }
   }
@@ -79,12 +86,22 @@ void sendPos() {
   if (step % 10 == 0) {
     client.print(String(step) + "\n");
     client.flush();
+    Serial.print("Step ");
+    Serial.println(step);
+
   }
 }
 
 void rollUP() {
   digitalWrite(DIR, HIGH);
-  if (step > 0) {
+  if (kalibRoz || kalibZwin) {
+    digitalWrite(SLEEP, LOW);
+    digitalWrite(STEP, HIGH);
+    delayMicroseconds(STEP_SPEED);
+    digitalWrite(STEP, LOW);
+    delayMicroseconds(STEP_SPEED);
+  }
+  else if (step > 0) {
     digitalWrite(SLEEP, LOW);
     step--;
     digitalWrite(STEP, HIGH);
@@ -97,12 +114,23 @@ void rollUP() {
     if (digitalRead(SLEEP) == LOW) {
       digitalWrite(SLEEP, HIGH);
     }
+    rolling = 0;
+    trybAuto_delay = 1000;
+
   }
 }
 
 void rollDOWN() {
   digitalWrite(DIR, LOW);
-  if (step < MAX_STEP) {
+  if (kalibRoz || kalibZwin) {
+    digitalWrite(SLEEP, LOW);
+    step++;
+    digitalWrite(STEP, HIGH);
+    delayMicroseconds(STEP_SPEED);
+    digitalWrite(STEP, LOW);
+    delayMicroseconds(STEP_SPEED);
+  }
+  else if (step < MAXstep) {
     digitalWrite(SLEEP, LOW);
     step++;
     digitalWrite(STEP, HIGH);
@@ -114,12 +142,59 @@ void rollDOWN() {
   else {
     if (digitalRead(SLEEP) == LOW) {
       digitalWrite(SLEEP, HIGH);
+
     }
+    trybAuto_delay = 1000;
+    rolling = 0;
   }
 }
 
 
 void loop() {
+
+  if (trybAuto) {
+
+    double L1 = analogRead(LIGHT_SENS1);
+    double L2 = analogRead(LIGHT_SENS2);
+
+
+    if (L1 - L2 > 200 || (L1 > 300 && L2 > 300)) {
+      b = (b << 1) | 1;
+    }
+    else {
+      b = b << 1;
+    }
+
+    // do gory
+    // if (L1 > L2) {
+    if (b == B11111111) {
+      Serial.println("1");
+      if (trybAuto_pom != 2) {
+        Serial.println("Auto UP");
+        trybAuto_delay = 0;
+        trybAuto_pom = 2;
+        rolling = 2;
+      }
+
+    }//na dol
+    else if (b == B00000000) {
+      Serial.println("0");
+      if (trybAuto_pom != 1) {
+        Serial.println("Auto DOWN");
+        trybAuto_delay = 0;
+        trybAuto_pom = 1;
+        rolling = 1;
+      }
+
+    }
+
+    // Serial.print("L1 ");
+    // Serial.print(double(L1 / 1000), 4);
+    // Serial.print("\tL2 ");
+    // Serial.println(double(L2 / 1000), 4);
+
+    // delay(200);
+  }
 
   switch (rolling) {
   case 2:
@@ -138,34 +213,32 @@ void loop() {
   }
 
 
+
   while (!connToClient) {
     client = server.available();
     if (client) {
 
       connToClient = true;
-      Serial.println("We have a new client");
+      Serial.println("\nWe have a new client");
+      client.print(String(MAXstep) + "\n");
       client.print(String(step) + "\n");
       client.flush();
 
     }
     else {
-
-      double i = analogRead(LIGHT_SENS1);
-
-      Serial.print(double(i / 1000), 4);
-      Serial.print('\t');
-      i = analogRead(LIGHT_SENS2);
-
-      Serial.println(double(i / 1000), 4);
+      Serial.print('.');
 
 
 
-
-      // Serial.print('.');
       for (int i = 0;i < 3;i++) {
-        digitalWrite(pins[i], !digitalRead(pins[i]));
+        digitalWrite(pins[i], HIGH);
       }
       delay(500);
+      for (int i = 0;i < 3;i++) {
+        digitalWrite(pins[i], LOW);
+      }
+      delay(500);
+
     }
   }
 
@@ -180,27 +253,65 @@ void loop() {
     while (client.available() > 0)
     {
       int c = client.read();
-      Serial.print(c);
+      Serial.println(c);
+      Serial.flush();
       switch (c)
       {
       case 2:
-        digitalWrite(UP, 1);
-        digitalWrite(STOP, 0);
+        digitalWrite(LED_UP, 1);
+        digitalWrite(LED_STOP, 0);
         break;
 
       case 0:
         sendPos();
-        digitalWrite(UP, 0);
-        digitalWrite(STOP, 1);
-        digitalWrite(DOWN, 0);
+        digitalWrite(LED_UP, 0);
+        digitalWrite(LED_STOP, 1);
+        digitalWrite(LED_DOWN, 0);
         break;
 
       case 1:
-        digitalWrite(DOWN, 1);
-        digitalWrite(STOP, 0);
+        digitalWrite(LED_DOWN, 1);
+        digitalWrite(LED_STOP, 0);
+        break;
+
+      case 4:
+        if (kalibRoz) {
+          MAXstep = step;
+          client.print(String(-MAXstep) + "\n");
+          client.flush();
+          Serial.print("kalib Roz zakonczona MAXstep = ");
+          Serial.println(MAXstep);
+          kalibRoz = false;
+        }
+        else {
+          Serial.println("kalib Roz start");
+          kalibRoz = true;
+        }
+        c = 0;
+        break;
+
+      case 3:
+        if (kalibZwin) {
+          step = 0;
+          Serial.print("kalib Zwin zakonczona step = ");
+          Serial.println(step);
+          kalibZwin = false;
+        }
+        else {
+          Serial.println("kalib Zwin start");
+          kalibZwin = true;
+        }
+        c = 0;
+        break;
+
+      case 5:
+        trybAuto = !trybAuto;
+        trybAuto_pom = 0;
+        c = 0;
         break;
 
       default:
+        c = 0;
         break;
       }
       rolling = c;
